@@ -1,8 +1,8 @@
-module BreadthFirstSearch where
+module BreadthFirstSearch (listM) where
 
 listM :: (Eq a, Monad m) => (a -> m [a]) -> a -> m [a]
 listM f x = do next <- f x
-               rest <- listM' f $ concat [next]
+               rest <- listM' f next
                return $ x : rest
 
 listM' :: (Eq a, Monad m) => (a -> m [a]) -> [a] -> m [a]

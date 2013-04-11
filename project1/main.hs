@@ -3,28 +3,31 @@ module Main where
 import System.Environment
 import System.IO
 import Data.List (find)
-import Data.Set (empty)
+import Data.Set (Set, empty)
 import Control.Monad.Trans.State.Lazy
 import BreadthFirstSearch as BFS
+import DepthFirstSearch as DFS
 import MissionariesCannibals as MC
 
 supported :: [String]
-supported = ["bfs"] -- ... ,"dfs", "iddfs", "astar"]
+supported = ["bfs","dfs"]-- ... "iddfs", "astar"]
 
 help :: String
 help = "Usage:  main <initial state file> <goal state file> <mode> <output file>\n\n"++
             "-h, --help  -> This usage document.\n"
 
+-- 
 solve :: String -> Lake -> Lake -> Moves
 solve _ _ (_,_,c,_,_,z) | c<0 || z<0 || c+z /= 1 = ["Invalid boat configuration."]
-solve m g l | m == "bfs" = reverse $ solveGame g (l, [show l])
+solve m g l | m == "bfs" = reverse $ solveGame BFS.listM g (l, [show l])
+            | m == "dfs" = reverse $ solveGame DFS.listM g (l, [show l])
             | otherwise  = ["Unsupported algorithm"]
-            -- | m == "dfs"   = ...
+
             -- | m == "iddfs" = ...
             -- | m == "astar" = ...
 
-solveGame :: Lake -> Game -> Moves
-solveGame g ini = case find (MC.isGoal g) $ zip [1..] $ evalState (BFS.listM expand ini) empty of
+solveGame :: ((Game -> State (Set Lake) [Game]) -> Game -> State (Set Lake) [Game]) -> Lake -> Game -> Moves
+solveGame f g ini = case find (MC.isGoal g) $ zip [1..] $ evalState (f MC.expand ini) empty of
     Nothing         -> ["No solution."]
     Just (n, (_,m)) -> concat ["Nodes expanded: ",show n,"."]:m
 
