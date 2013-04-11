@@ -10,8 +10,6 @@ type Game = (Lake, Moves)
 isGoal :: Lake -> (Int, Game) -> Bool
 isGoal a (_, (b, _)) = a == b
 
-isNotGoal :: Lake -> (Int, Game) -> Bool
-isNotGoal a (_, (b, _)) = a /= b
 
 expand :: Game -> State (Set Lake) [Game]
 expand game@(lake,_) = do 

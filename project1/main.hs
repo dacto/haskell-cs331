@@ -7,6 +7,7 @@ import Data.Set (Set, empty)
 import Control.Monad.Trans.State.Lazy
 import BreadthFirstSearch as BFS
 import DepthFirstSearch as DFS
+import IterativeDeepeningDFS as IFS
 import MissionariesCannibals as MC
 
 supported :: [String]
@@ -19,17 +20,18 @@ help = "Usage:  main <initial state file> <goal state file> <mode> <output file>
 -- 
 solve :: String -> Lake -> Lake -> Moves
 solve _ _ (_,_,c,_,_,z) | c<0 || z<0 || c+z /= 1 = ["Invalid boat configuration."]
-solve m g l | m == "bfs" = reverse $ solveGame BFS.listM g (l, [show l])
-            | m == "dfs" = reverse $ solveGame DFS.listM g (l, [show l])
-            | otherwise  = ["Unsupported algorithm"]
+solve m g l | m == "bfs"   = reverse $ solve' BFS.listM g i
+            | m == "dfs"   = reverse $ solve' DFS.listM g i
+            | m == "iddfs" = reverse $ solve' IFS.listM g i
+            | otherwise    = ["Unsupported algorithm"]
+            where i = (l, [show l])
 
-            -- | m == "iddfs" = ...
             -- | m == "astar" = ...
 
-solveGame :: ((Game -> State (Set Lake) [Game]) -> Game -> State (Set Lake) [Game]) -> Lake -> Game -> Moves
-solveGame f g ini = case find (MC.isGoal g) $ zip [1..] $ evalState (f MC.expand ini) empty of
-    Nothing         -> ["No solution."]
-    Just (n, (_,m)) -> concat ["Nodes expanded: ",show n,"."]:m
+solve' :: ((Game -> State (Set Lake) [Game]) -> Game -> State (Set Lake) [Game]) -> Lake -> Game -> Moves
+solve' f g i = case find (MC.isGoal g) $ zip [1..] $ evalState (f MC.expand i) empty of
+              Nothing         -> ["No solution."]
+              Just (n, (_,m)) -> concat ["Nodes expanded: ",show n,"."]:m
 
 main :: IO ()
 main = do 
