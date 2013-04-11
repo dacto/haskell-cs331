@@ -3,7 +3,7 @@ module Main where
 import System.Environment
 import System.IO
 import Data.List (find)
-import Data.Set (Set, member, insert, empty)
+import Data.Set (empty)
 import Control.Monad.Trans.State.Lazy
 import BreadthFirstSearch as BFS
 import MissionariesCannibals as MC
@@ -24,12 +24,9 @@ solve m g l | m == "bfs" = reverse $ solveGame g (l, [show l])
             -- | m == "astar" = ...
 
 solveGame :: Lake -> Game -> Moves
-solveGame g ini = case find (isGoal g) $ zip [1..] $ evalState (BFS.listM expand ini) empty of
+solveGame g ini = case find (MC.isGoal g) $ zip [1..] $ evalState (BFS.listM expand ini) empty of
     Nothing         -> ["No solution."]
     Just (n, (_,m)) -> concat ["Nodes expanded: ",show n,"."]:m
-
-isGoal :: Lake -> (Int, Game) -> Bool
-isGoal a (_, (b, _)) = a == b
 
 main :: IO ()
 main = do 

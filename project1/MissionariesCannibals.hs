@@ -7,6 +7,9 @@ type Moves = [String]
 type Lake = (Int, Int, Int, Int, Int, Int)
 type Game = (Lake, Moves)
 
+isGoal :: Lake -> (Int, Game) -> Bool
+isGoal a (_, (b, _)) = a == b
+
 expand :: Game -> State (Set Lake) [Game]
 expand game@(lake,_) = do 
                        set <- get
