@@ -12,7 +12,7 @@ supported :: [String]
 supported = ["bfs"] -- ... ,"dfs", "iddfs", "astar"]
 
 help :: String
-help = "Usage:  cm <initial state file> <goal state file> <mode> <output file>\n\n"++
+help = "Usage:  main <initial state file> <goal state file> <mode> <output file>\n\n"++
             "-h, --help  -> This usage document.\n"
 
 solve :: String -> Lake -> Lake -> Moves
