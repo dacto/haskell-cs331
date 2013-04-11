@@ -1,11 +1,15 @@
 module IterativeDeepeningDFS (listM) where
 
-listM :: (Eq a, Monad m) => (a -> m [a]) -> a -> m [a]
-listM f x = return $ listM' f x 1
+import MissionariesCannibals (Game, Lake, Moves)
 
-listM' :: (Eq a, Monad m) => (a -> m [a]) -> a -> Int -> m [a]
-listM' f x@(_,n) i = do expand <- f x
+listM :: (Monad m) => (Game -> m [Game]) -> Game -> m [Game]
+listM f x = do
+               val <- listM' f x 1
+               return val
+
+listM' :: (Monad m) => (Game -> m [Game]) -> Game -> Int -> m [Game]
+listM' f x@(_,n) i = do fiveMoves <- f x
                         let depth = length n
-                        if null expand || depth >= i then return []
-                        else do next <- mapM (\v -> listM' f v i) expand
+                        if null fiveMoves || depth >= i then return []
+                        else do next <- mapM (\v -> listM' f v i) fiveMoves
                                 return $ x : concat next
