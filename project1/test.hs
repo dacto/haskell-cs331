@@ -13,4 +13,7 @@ test m g l | m == "bfs" = reverse $ test' BFS.listM g (l, [show l])
            | m == "dfs" = reverse $ test' DFS.listM g (l, [show l])
 
 test' :: ((Game -> State (Set Lake) [Game]) -> Game -> State (Set Lake) [Game]) -> Lake -> Game -> [(Int, Game)]
-test' f g ini = takeWhile (MC.isNotGoal g) $ zip [1..] $ evalState (f MC.expand ini) empty
+test' f g ini = takeWhile (isNotGoal g) $ zip [1..] $ evalState (f MC.expand ini) empty
+
+isNotGoal :: Lake -> (Int, Game) -> Bool
+isNotGoal a (_, (b, _)) = a /= b

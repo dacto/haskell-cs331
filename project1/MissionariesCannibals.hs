@@ -10,14 +10,27 @@ type Game = (Lake, Moves)
 isGoal :: Lake -> (Int, Game) -> Bool
 isGoal a (_, (b, _)) = a == b
 
-isNotGoal :: Lake -> (Int, Game) -> Bool
-isNotGoal a (_, (b, _)) = a /= b
+isGoal' :: Lake -> Game -> Bool
+isGoal' a (b, _) = a == b
+
 
 expand :: Game -> State (Set Lake) [Game]
 expand game@(lake,_) = do 
                        set <- get
                        if member lake set then return []
                        else do put $ insert lake set
+                               return $ concat [a, b, c, d, e]
+                               where a = move1M game
+                                     b = move2M game
+                                     c = move1C game
+                                     d = move1M1C game
+                                     e = move2C game
+
+expand' :: Game -> State (Int, Set Lake) [Game]
+expand' game@(lake,_) = do 
+                       (count, set) <- get
+                       if member lake set then return []
+                       else do put $ (count+1, insert lake set)
                                return $ concat [a, b, c, d, e]
                                where a = move1M game
                                      b = move2M game

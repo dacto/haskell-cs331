@@ -1,15 +1,12 @@
 module IterativeDeepeningDFS (listM) where
 
-import MissionariesCannibals (Game, Lake, Moves)
+listM :: (Eq a, Eq b, Monad m) => ((a,[b]) -> m [(a,[b])]) -> (a,[b]) -> m [(a,[b])]
+listM f x = listDepth f x 20
 
-listM :: (Monad m) => (Game -> m [Game]) -> Game -> m [Game]
-listM f x = do
-               val <- listM' f x 1
-               return val
-
-listM' :: (Monad m) => (Game -> m [Game]) -> Game -> Int -> m [Game]
-listM' f x@(_,n) i = do fiveMoves <- f x
-                        let depth = length n
-                        if null fiveMoves || depth >= i then return []
-                        else do next <- mapM (\v -> listM' f v i) fiveMoves
+listDepth :: (Eq a, Eq b, Monad m) => ((a,[b]) -> m [(a,[b])]) -> (a,[b]) -> Int -> m [(a,[b])]
+listDepth f x@(_,n) i
+    | length n > i = return []
+    | otherwise    = do moves <- f x
+                        if null moves then return []
+                        else do next <- mapM (\v -> listDepth f v i) moves
                                 return $ x : concat next
