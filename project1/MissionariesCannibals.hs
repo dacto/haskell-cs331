@@ -1,5 +1,4 @@
 module MissionariesCannibals where
-
 import Data.Set (Set, member, insert)
 import Control.Monad.Trans.State.Lazy
 
@@ -7,36 +6,62 @@ type Moves = [String]
 type Lake = (Int, Int, Int, Int, Int, Int)
 type Game = (Lake, Moves)
 
-isGoal :: Lake -> (Int, Game) -> Bool
-isGoal a (_, (b, _)) = a == b
-
-isGoal' :: Lake -> Game -> Bool
-isGoal' a (b, _) = a == b
 
 
-expand :: Game -> State (Set Lake) [Game]
-expand game@(lake,_) = do 
-                       set <- get
-                       if member lake set then return []
-                       else do put $ insert lake set
-                               return $ concat [a, b, c, d, e]
-                               where a = move1M game
-                                     b = move2M game
-                                     c = move1C game
-                                     d = move1M1C game
-                                     e = move2C game
+isGoal :: Lake -> Game -> Bool
+isGoal a (b, _) = a == b
 
-expand' :: Game -> State (Int, Set Lake) [Game]
-expand' game@(lake,_) = do 
-                       (count, set) <- get
-                       if member lake set then return []
-                       else do put $ (count+1, insert lake set)
-                               return $ concat [a, b, c, d, e]
-                               where a = move1M game
-                                     b = move2M game
-                                     c = move1C game
-                                     d = move1M1C game
-                                     e = move2C game
+
+getDepth :: Game -> Int
+getDepth (_, m) = length m
+
+
+
+expand' :: Game -> State (Int, Int, Set Lake) [Game]
+expand' game@(lake,_) =
+    do (count, maxDepth, set) <- get
+       if member lake set then return []
+       else do put (count+1, maxDepth, insert lake set)
+               return $ concat [a, b, c, d, e]
+               where a = move1M game
+                     b = move2M game
+                     c = move1C game
+                     d = move1M1C game
+                     e = move2C game
+
+
+
+expand :: Game -> State (Int, Int, Set Lake) [Game]
+expand game@(lake,_) =
+    do (count, maxDepth, set) <- get
+       let currDepth = getDepth game
+       if member lake set then return []
+       else do let depth = max currDepth maxDepth
+               put (count+1, depth, insert lake set)
+               return $ concat [a, b, c, d, e]
+               where a = move1M game
+                     b = move2M game
+                     c = move1C game
+                     d = move1M1C game
+                     e = move2C game
+
+
+
+expandToDepth :: Int -> Game -> State (Int, Int, Set Lake) [Game]
+expandToDepth n game@(lake,_) =
+    do (count, maxDepth, set) <- get
+       let currDepth = getDepth game
+       if member lake set || currDepth > n then return []
+       else do let depth = max currDepth maxDepth
+               put (count+1, depth, insert lake set)
+               return $ concat [a, b, c, d, e]
+               where a = move1M game
+                     b = move2M game
+                     c = move1C game
+                     d = move1M1C game
+                     e = move2C game
+
+
 
 move1M :: Game -> [Game]
 move1M ((a, b, 1, x, y, 0), moves)

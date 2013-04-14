@@ -7,30 +7,29 @@ import Data.Set (Set, empty)
 import Control.Monad.Trans.State.Lazy
 import BreadthFirstSearch as BFS
 import DepthFirstSearch as DFS
-import IterativeDeepeningDFS as IFS
+--import IterativeDeepeningDFS as IFS
 import MissionariesCannibals
 
-calc (Nothing, (n, _))     = reverse $ (show n ++ " nodes expanded") : ["no solution found"]
-calc (Just (_, m), (n, _)) = reverse $ (show n ++ " nodes expanded") : m
+
+calc (Nothing, (n, _, _)) =
+    reverse $ (show n ++ " nodes expanded") : ["no solution found"]
+calc (Just (_, m), ((n, _, _))) =
+    reverse $ (show n ++ " nodes expanded") : m
 
 
 
 solve :: String -> Lake -> Lake -> Moves
 solve mode goal lake
-    | badBoats lake   = ["Invalid boat configuration"]
-    | mode == "bfs"   = reverse $ solve' BFS.listM goal start
-    | mode == "dfs"   = calc $ runState (DFS.solveM expand' (isGoal' goal) start) (0, empty)
-    | mode == "iddfs" = reverse $ solve' IFS.listM goal start
+    | badBoats lake = ["Invalid boat configuration"]
+    | mode == "bfs"
+        = case find (isGoal goal) $ evalState (BFS.listM expand start) (0, 0, empty) of
+               Nothing    -> ["no solution found"]
+               Just (_,m) -> m
+    | mode == "dfs"   = calc $ runState (DFS.solveM expand (isGoal goal) start) (0, 0, empty)
+    -- | mode == "iddfs" = calc $ solve' IFS.listM goal start
     | mode == "astar" = ["Algorithm incomplete"]
     | otherwise       = ["Unsupported algorithm"]
         where start = (lake, [show lake])
-
-
-
-solve' :: ((Game -> State (Set Lake) [Game]) -> Game -> State (Set Lake) [Game]) -> Lake -> Game -> Moves
-solve' f g i = case find (isGoal g) $ zip [1..] $ evalState (f expand i) empty of
-              Nothing         -> ["No solution."]
-              Just (n, (_,m)) -> concat ["Nodes expanded: ",show n,"."]:m
 
 
 
