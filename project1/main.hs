@@ -18,18 +18,18 @@ calc (Just (_, m), ((n, _, _))) =
 
 
 
-solve :: String -> Lake -> Lake -> Moves
-solve mode goal lake
-    | badBoats lake = ["Invalid boat configuration"]
-    | mode == "bfs"
-        = case find (isGoal goal) $ evalState (BFS.listM expand start) (0, 0, empty) of
+solve :: String -> Lake -> Game -> Moves
+solve "bfs" goal start =
+    case find (isGoal goal) $ evalState (BFS.listM expand start) (0, 0, empty) of
                Nothing    -> ["no solution found"]
                Just (_,m) -> m
-    | mode == "dfs"   = calc $ runState (DFS.solveM expand (isGoal goal) start) (0, 0, empty)
-    -- | mode == "iddfs" = calc $ solve' IFS.listM goal start
-    | mode == "astar" = ["Algorithm incomplete"]
-    | otherwise       = ["Unsupported algorithm"]
-        where start = (lake, [show lake])
+solve "dfs" goal start =
+    calc $ runState (DFS.solveM expand (isGoal goal) start) (0, 0, empty)
+solve "iddfs" goal start =
+    ["Algorithm incomplete"] -- calc $ solve' IFS.listM goal start
+solve "astar" goal start =
+    ["Algorithm incomplete"]
+
 
 
 
@@ -57,7 +57,12 @@ mainsub start goal mode output = do
                     b <- hGetLine start
                     c <- hGetLine goal
                     d <- hGetLine goal
-                    mapM_ (hPutStrLn output) $ solve mode (createtuple c d) (createtuple a b)
+                    let startState = createtuple a b
+                    let goalState = createtuple c d
+                    mapM_ (hPutStrLn output) $
+                        if goodBoats startState && supported mode
+                        then solve mode goalState (startState, [show startState])
+                        else [help]
 
 
 
@@ -95,5 +100,5 @@ help = "Usage:  main <initial state file> <goal state file> <mode> <output file>
 
 
 
-badBoats :: Lake -> Bool
-badBoats (_,_,c,_,_,z) = c<0 || z<0 || c+z /= 1
+goodBoats :: Lake -> Bool
+goodBoats (_,_,c,_,_,z) = c >= 0 && z >= 0 && c + z == 1
