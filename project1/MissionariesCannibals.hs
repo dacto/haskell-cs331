@@ -47,13 +47,13 @@ expand game@(lake,_) =
 
 
 
-expandToDepth :: Int -> Game -> State (Int, Int, Set Lake) [Game]
-expandToDepth n game@(lake,_) =
-    do (count, maxDepth, set) <- get
+expandToDepth :: Game -> Int -> State (Int, Int) [Game]
+expandToDepth game@(lake,_) depth =
+    do (count, maxDepth) <- get
        let currDepth = getDepth game
-       if member lake set || currDepth > n then return []
+       if currDepth > depth then return []
        else do let depth = max currDepth maxDepth
-               put (count+1, depth, insert lake set)
+               put (count+1, depth)
                return $ concat [a, b, c, d, e]
                where a = move1M game
                      b = move2M game
