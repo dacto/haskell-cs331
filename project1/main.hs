@@ -7,13 +7,18 @@ import Data.Set (Set, empty)
 import Control.Monad.Trans.State.Lazy
 import BreadthFirstSearch as BFS
 import DepthFirstSearch as DFS
---import IterativeDeepeningDFS as IFS
+import IterativeDeepeningDFS as IFS
 import MissionariesCannibals
 
 
 calc (Nothing, (n, _, _)) =
     reverse $ (show n ++ " nodes expanded") : ["no solution found"]
 calc (Just (_, m), ((n, _, _))) =
+    reverse $ (show n ++ " nodes expanded") : m
+
+calc' (Nothing, (n, _)) =
+    reverse $ (show n ++ " nodes expanded") : ["no solution found"]
+calc' (Just (_, m), ((n, _))) =
     reverse $ (show n ++ " nodes expanded") : m
 
 
@@ -26,7 +31,8 @@ solve "bfs" goal start =
 solve "dfs" goal start =
     calc $ runState (DFS.solveM expand (isGoal goal) start) (0, 0, empty)
 solve "iddfs" goal start =
-    ["Algorithm incomplete"] -- calc $ solve' IFS.listM goal start
+    calc' $ runState (IFS.solveM expandToDepth (isGoal goal) start) (0, 0)
+    --["Algorithm incomplete"] -- calc $ solve' IFS.listM goal start
 solve "astar" goal start =
     ["Algorithm incomplete"]
 
