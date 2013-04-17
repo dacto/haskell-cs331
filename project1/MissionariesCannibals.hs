@@ -6,15 +6,12 @@ type Moves = [String]
 type Lake = (Int, Int, Int, Int, Int, Int)
 type Game = (Lake, Moves)
 
-
-
 isGoal :: Lake -> Game -> Bool
 isGoal a (b, _) = a == b
 
-
+-- Can use this as a heuristic of boat moves (every move is a boat-move)
 getDepth :: Game -> Int
 getDepth (_, m) = length m
-
 
 basicExpand :: Game -> [Game]
 basicExpand game = concat [a, b, c, d, e]
@@ -24,15 +21,12 @@ basicExpand game = concat [a, b, c, d, e]
                      d = move1M1C game
                      e = move2C game
 
-
 expand' :: Game -> State (Int, Int, Set Lake) [Game]
 expand' game@(lake,_) =
     do (count, maxDepth, set) <- get
        if member lake set then return []
        else do put (count+1, maxDepth, insert lake set)
                return $ basicExpand game
-
-
 
 expand :: Game -> State (Int, Int, Set Lake) [Game]
 expand game@(lake,_) =
@@ -43,18 +37,14 @@ expand game@(lake,_) =
                put (count+1, depth, insert lake set)
                return $ basicExpand game
 
-
-
 expandToDepth :: Game -> Int -> State (Int, Int) [Game]
-expandToDepth game@(lake,_) depth =
+expandToDepth game depth =
     do (count, maxDepth) <- get
        let currDepth = getDepth game
        if currDepth > depth then return []
-       else do let depth = max currDepth maxDepth
-               put (count+1, depth)
+       else do let depth' = max currDepth maxDepth
+               put (count+1, depth')
                return $ basicExpand game
-
-
 
 move1M :: Game -> [Game]
 move1M ((a, b, 1, x, y, 0), moves)
