@@ -1,9 +1,11 @@
 module BreadthFirstSearch (solveM) where
 import Data.List (find)
 
-solveM :: (Eq a, Monad m) => (a -> m [a]) -> (a -> Bool) -> a -> m (Maybe a)
-solveM expand isGoal root = do tree <- listM expand root
-                               return $ find isGoal tree
+solveM :: (Eq a, Functor m, Monad m) => (a -> m [a]) -> (a -> Bool) -> a -> m (Maybe a)
+solveM expand isGoal root = fmap (find isGoal) (listM expand root)
+
+							--do tree <- listM expand root
+                            --   return $ find isGoal tree
 
 listM :: (Eq a, Monad m) => (a -> m [a]) -> a -> m [a]
 listM expand node = do new <- expand node
