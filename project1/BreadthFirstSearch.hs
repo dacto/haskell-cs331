@@ -19,5 +19,6 @@ listM expand node = do new <- expand node
 
 listM' :: (Eq a, Monad m) => (a -> m [a]) -> [a] -> m [a]
 listM' expand row = do next <- mapM expand row
-                       rest <- listM' expand $ concat next
-                       return $ row ++ rest
+                       if null (concat next) then return []
+                       else do rest <- listM' expand $ concat next
+                               return $ row ++ rest
