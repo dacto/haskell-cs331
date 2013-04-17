@@ -13,21 +13,19 @@ import MissionariesCannibals
 
 calc (Nothing, (n, _, _)) =
     reverse $ (show n ++ " nodes expanded") : ["no solution found"]
-calc (Just (_, m), ((n, _, _))) =
+calc (Just (_, m), (n, _, _)) =
     reverse $ (show n ++ " nodes expanded") : m
 
 calc' (Nothing, (n, _)) =
     reverse $ (show n ++ " nodes expanded") : ["no solution found"]
-calc' (Just (_, m), ((n, _))) =
+calc' (Just (_, m), (n, _)) =
     reverse $ (show n ++ " nodes expanded") : m
 
 
 
 solve :: String -> Lake -> Game -> Moves
 solve "bfs" goal start =
-    case find (isGoal goal) $ evalState (BFS.listM expand start) (0, 0, empty) of
-               Nothing    -> ["no solution found"]
-               Just (_,m) -> m
+    calc $ runState (BFS.solveM expand (isGoal goal) start) (0, 0, empty)
 solve "dfs" goal start =
     calc $ runState (DFS.solveM expand (isGoal goal) start) (0, 0, empty)
 solve "iddfs" goal start =
