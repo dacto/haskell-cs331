@@ -31,7 +31,7 @@ solve "bfs" goal start =
 solve "dfs" goal start =
     calc $ runState (DFS.solveM expand (isGoal goal) start) (0, 0, empty)
 solve "iddfs" goal start =
-    calc' $ runState (IFS.solveM expandToDepth (isGoal goal) start) (0, 0)
+    calc' $ runState (IFS.solveM (isGoal goal) start) (0, 0)
     --["Algorithm incomplete"] -- calc $ solve' IFS.listM goal start
 solve "astar" goal start =
     ["Algorithm incomplete"]
