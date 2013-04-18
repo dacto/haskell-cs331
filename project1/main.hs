@@ -11,27 +11,16 @@ import AStarSearch as ASS
 import MissionariesCannibals
 
 
-calc (Nothing, (n, _, _)) =
-    reverse $ (show n ++ " nodes expanded") : ["no solution found"]
-calc (Just (_, m), (n, _, _)) =
-    reverse $ (show n ++ " nodes expanded") : m
-
-calc' (Nothing, (n, _)) =
-    reverse $ (show n ++ " nodes expanded") : ["no solution found"]
-calc' (Just (_, m), (n, _)) =
-    reverse $ (show n ++ " nodes expanded") : m
-
-
 
 solve :: String -> Lake -> Game -> Moves
 solve "bfs" goal start =
-    calc $ runState (BFS.solveM expand (isGoal goal) start) (0, 0, empty)
+    formatA $ runState (BFS.solveM expand (isGoal goal) start) (0, 0, empty)
 solve "dfs" goal start =
-    calc $ runState (DFS.solveM expand (isGoal goal) start) (0, 0, empty)
+    formatA $ runState (DFS.solveM expand (isGoal goal) start) (0, 0, empty)
 solve "iddfs" goal start =
-    [show $ IFS.solveM (empty, 0, 0) basicExpand (isGoal goal) 2 [start]]
+    formatB $ IFS.solveM (empty, 0, 0) basicExpand (isGoal goal) 2 [start]
 solve "astar" goal start = 
-    calc $ runState (ASS.solveM heuristic (isGoal goal) start) (0, 0, empty)
+    formatA $ runState (ASS.solveM heuristic (isGoal goal) start) (0, 0, empty)
 
 
 
@@ -69,6 +58,17 @@ mainsub start goal mode output = do
 
 
 
+formatA (Nothing, (n, _, _)) =
+    reverse $ (show n ++ " nodes expanded") : ["no solution found"]
+formatA (Just (_, m), (n, _, _)) =
+    reverse $ (show n ++ " nodes expanded") : m
+
+formatB (Nothing, _, n) =
+    reverse $ (show n ++ " nodes expanded") : ["no solution found"]
+formatB (Just (_, m), _, n) =
+    reverse $ (show n ++ " nodes expanded") : m
+
+
 split' :: (Char -> Bool) -> String -> [String]
 split' p s = case dropWhile p s of "" -> []
                                    s' -> w : split' p s''
@@ -91,6 +91,11 @@ supported y = y `elem` ["bfs","dfs","iddfs", "astar"]
 
 
 
+goodBoats :: Lake -> Bool
+goodBoats (_,_,c,_,_,z) = c >= 0 && z >= 0 && c + z == 1
+
+
+
 help :: String
 help = "Usage:  main <initial state file> <goal state file> <mode> <output file>\n\n"++
        "        Valid modes:\n"++
@@ -100,8 +105,3 @@ help = "Usage:  main <initial state file> <goal state file> <mode> <output file>
        "            astar = AStar Search\n\n"++
        "        Options:\n"++
        "            -h, --help  -> This usage document.\n"
-
-
-
-goodBoats :: Lake -> Bool
-goodBoats (_,_,c,_,_,z) = c >= 0 && z >= 0 && c + z == 1
