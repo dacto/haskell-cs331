@@ -9,9 +9,17 @@ type Game = (Lake, Moves)
 isGoal :: Lake -> Game -> Bool
 isGoal a (b, _) = a == b
 
--- Can use this as a heuristic of boat moves (every move is a boat-move)
+-- g(n); get the number of boat moves to get to this state.
 getDepth :: Game -> Int
 getDepth (_, m) = length m
+
+-- h(n); get optimistic boat moves necessary for this state to become the goal.
+getDesireDepth :: Game -> Int
+getDesireDepth ((_, _, _, x, y, _), _) = x + y - 1
+
+-- f(n) = g(n) + h(n)
+heuristic :: Game -> Int
+heuristic g = getDepth g + getDesireDepth g
 
 basicExpand :: Game -> [Game]
 basicExpand game = concat [a, b, c, d, e]
