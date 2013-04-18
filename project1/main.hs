@@ -29,8 +29,7 @@ solve "bfs" goal start =
 solve "dfs" goal start =
     calc $ runState (DFS.solveM expand (isGoal goal) start) (0, 0, empty)
 solve "iddfs" goal start =
-    [show $ IFS.solveM (empty, 0, 0) basicExpand (isGoal goal) 400 [start]]
-    --["Algorithm incomplete"] -- calc $ solve' IFS.listM goal start
+    [show $ IFS.solveM' (empty, 0, 0) basicExpand (isGoal goal) 2 [start]]
 solve "astar" goal start = 
     calc $ runState (ASS.solveM heuristic (isGoal goal) start) (0, 0, empty)
 
@@ -63,10 +62,11 @@ mainsub start goal mode output = do
                     d <- hGetLine goal
                     let startState = createtuple a b
                     let goalState = createtuple c d
-                    mapM_ (hPutStrLn output) $
-                        if goodBoats startState && supported mode
-                        then solve mode goalState (startState, [show startState])
-                        else [help]
+                    let results = if goodBoats startState && supported mode
+                                  then solve mode goalState (startState, [show startState])
+                                  else [help]
+                    mapM_ (hPutStrLn output) results
+                    mapM_ putStrLn results
 
 
 
