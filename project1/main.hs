@@ -2,12 +2,12 @@ module Main where
 
 import System.Environment
 import System.IO
-import Data.List (find)
-import Data.Set (Set, empty)
+import Data.Set (empty)
 import Control.Monad.Trans.State.Lazy
 import BreadthFirstSearch as BFS
 import DepthFirstSearch as DFS
 import IterativeDeepeningDFS as IFS
+import AStarSearch as ASS
 import MissionariesCannibals
 
 
@@ -31,8 +31,8 @@ solve "dfs" goal start =
 solve "iddfs" goal start =
     [show $ IFS.solveM (empty, 0, 0) basicExpand (isGoal goal) 400 [start]]
     --["Algorithm incomplete"] -- calc $ solve' IFS.listM goal start
-solve "astar" goal start =
-    ["Algorithm incomplete"]
+solve "astar" goal start = 
+    calc $ runState (ASS.solveM heuristic (isGoal goal) start) (0, 0, empty)
 
 
 
