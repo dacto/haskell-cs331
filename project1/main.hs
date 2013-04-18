@@ -35,7 +35,6 @@ solve "astar" goal start =
 
 
 
-
 main :: IO ()
 main = do 
         args <- getArgs

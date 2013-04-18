@@ -1,4 +1,4 @@
-module IterativeDeepeningDFS (solveM) where
+module IterativeDeepeningDFS (solveM, solveM') where
 import Data.Set (Set, empty, member, insert)
 import Data.List (find)
 import MissionariesCannibals (Game, Lake, Moves)
@@ -6,18 +6,31 @@ import MissionariesCannibals (Game, Lake, Moves)
 solveM :: (Set Lake, Int, Int)      -- (history, max depth, nodes expanded)
           -> (Game -> [Game])       -- expand function
           -> (Game -> Bool)         -- isGoal function
-          -> Int                    -- search depth
+          -> Int                    -- first search depth
           -> [Game]                 -- children nodes
           -> (Maybe Game, Int, Int) -- return: (Game, Max Depth, Nodes Expanded)
-solveM s _ _ _ [] = (Nothing, getDepth s, getNodes s)
-solveM s e g d (x:xs)
-    | member' x s               = solveM s e g d xs
-    | g x                       = (Just x, getDepth s, getNodes s)
-    | numMoves x == d           = solveM s e g d xs
+solveM  s e g d n = let (a, b, c) = solveM' s e g d n in
+                    case a of Nothing -> if b < d then (a, b, c)
+                                         else solveM (empty, 0, c) e g (d+1) n
+                              _       -> (a, b, c)
+
+
+
+solveM' :: (Set Lake, Int, Int)      -- (history, max depth, nodes expanded)
+          -> (Game -> [Game])       -- expand function
+          -> (Game -> Bool)         -- isGoal function
+          -> Int                    -- current search depth
+          -> [Game]                 -- children nodes
+          -> (Maybe Game, Int, Int) -- return: (Game, Max Depth, Nodes Expanded)
+solveM' s _ _ _ [] = (Nothing, getDepth s, getNodes s)
+solveM' s e g d (x:xs)
+    | member' x s               = solveM' s e g d xs
+    | g x                       = (Just x, max (getDepth s) (numMoves x), getNodes s)
+    | numMoves x == d           = solveM' s e g d xs
     | otherwise                 =
-        let (a, b, c) = solveM (insert' x s, max (getDepth s) (numMoves x), getNodes s+1) e g d (e x) in
-        case a of Nothing -> solveM (getSet s, b, c) e g d xs
-                  _       -> (a, b, c)
+        let (a, b, c) = solveM' (insert' x s, max (getDepth s) (numMoves x+1), getNodes s+1) e g d (e x) in
+        case a of Nothing -> solveM' (getSet s, max (getDepth s) b, c) e g d xs
+                  _       -> (a, max (getDepth s) b, c)
 
 insert' :: Game -> (Set Lake, Int, Int) -> Set Lake
 insert' (l, _) (s, _, _) = insert l s
@@ -33,7 +46,6 @@ getNodes (_, _, x) = x
 
 getSet :: (Set Lake, Int, Int) -> Set Lake
 getSet (x, _, _) = x
-
 
 numMoves :: Game -> Int
 numMoves (lake, moves) = length moves - 1
