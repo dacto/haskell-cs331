@@ -29,7 +29,7 @@ solve "bfs" goal start =
 solve "dfs" goal start =
     calc $ runState (DFS.solveM expand (isGoal goal) start) (0, 0, empty)
 solve "iddfs" goal start =
-    [show $ IFS.solveM' (empty, 0, 0) basicExpand (isGoal goal) 2 [start]]
+    [show $ IFS.solveM (empty, 0, 0) basicExpand (isGoal goal) 2 [start]]
 solve "astar" goal start = 
     calc $ runState (ASS.solveM heuristic (isGoal goal) start) (0, 0, empty)
 
