@@ -29,13 +29,6 @@ basicExpand game = concat [a, b, c, d, e]
                      d = move1M1C game
                      e = move2C game
 
-expand' :: Game -> State (Int, Int, Set Lake) [Game]
-expand' game@(lake,_) =
-    do (count, maxDepth, set) <- get
-       if member lake set then return []
-       else do put (count+1, maxDepth, insert lake set)
-               return $ basicExpand game
-
 expand :: Game -> State (Int, Int, Set Lake) [Game]
 expand game@(lake,_) =
     do (count, maxDepth, set) <- get
@@ -43,15 +36,6 @@ expand game@(lake,_) =
        if member lake set then return []
        else do let depth = max currDepth maxDepth
                put (count+1, depth, insert lake set)
-               return $ basicExpand game
-
-expandToDepth :: Game -> Int -> State (Int, Int) [Game]
-expandToDepth game depth =
-    do (count, maxDepth) <- get
-       let currDepth = getDepth game
-       if currDepth > depth then return []
-       else do let depth' = max currDepth maxDepth
-               put (count+1, depth')
                return $ basicExpand game
 
 move1M :: Game -> [Game]
