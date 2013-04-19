@@ -6,6 +6,7 @@ type Moves = [String]
 type Lake = (Int, Int, Int, Int, Int, Int)
 type Game = (Lake, Moves)
 
+-- Goal function; Does the state match the goal?
 isGoal :: Lake -> Game -> Bool
 isGoal a (b, _) = a == b
 
@@ -21,14 +22,14 @@ getDesireDepth ((_, _, _, x, y, _), _) = x + y - 1
 heuristic :: Game -> Int
 heuristic g = getDepth g + getDesireDepth g
 
+-- Generate a list of valid moves
 basicExpand :: Game -> [Game]
-basicExpand game = concat [a, b, c, d, e]
-               where a = move1M game
-                     b = move2M game
-                     c = move1C game
-                     d = move1M1C game
-                     e = move2C game
+basicExpand game = concatMap ($ game) [move1M, move2M, move1C, move1M1C, move2C]
 
+-- The basic expansion function
+-- If the state has previously been seen then return an empty queue.
+-- Otherwise update the set with the new state.
+-- Generate the valid moves on the node.
 expand :: Game -> State (Int, Int, Set Lake) [Game]
 expand game@(lake,_) =
     do (count, maxDepth, set) <- get
@@ -38,6 +39,8 @@ expand game@(lake,_) =
                put (count+1, depth, insert lake set)
                return $ basicExpand game
 
+-- These are the different kind of moves we can make.
+-- If a move is invalid then return empty
 move1M :: Game -> [Game]
 move1M ((a, b, 1, x, y, 0), moves)
     | a   < 1            = []
