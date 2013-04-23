@@ -6,4 +6,5 @@ cabal-dev
 *.chs.h
 .virthualenv
 main
-
+Main
+out.txt
