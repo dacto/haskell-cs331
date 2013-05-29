@@ -15,7 +15,8 @@ main = do
 	let ns' = transpose ns
 	let r = parseLabels $ lines f2
 	let p = ("Positive", (True, fromIntegral (sum r) / fromIntegral (length r)))
-	putStrLn $ show p
+	putStrLn $ show $ length w
+	--putStrLn $ show p
 
 parseWords :: String -> [String]
 parseWords [] = []
