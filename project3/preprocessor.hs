@@ -12,13 +12,13 @@ main = do
 	f2 <- readFile "stoplist.txt"
 	f3 <- readFile "raw.train.txt"
 	f4 <- readFile "raw.test.txt"
-	let m = fromList $ zip (words f1 \\ words f2) $ repeat 0
-	let l = keys $ Map.filter (>3) $ foldl' addToKey m $ words f3 ++ words f4
-	let w = intercalate "," l
-	let n1 = map (makeVectorList l . sort . words) $ lines f3 ++ lines f4
-	let n2 = intercalate "\n" $ w : (map (intercalate "," . (map show)) n1)
-	mapM_ (putStrLn . show) [length (words f1), length (words f2), length (words f1 \\ words f2), length l]
-	--writeFile "training.txt" n2
+	let wordMap = (\x y -> fromList $ zip (words x \\ words y) (repeat 0))
+	let headers = keys $ Map.filter (>3) $ foldl' addToKey (wordMap f1 f2) $ words f3 ++ words f4
+	let addCommas = intercalate ","
+	let addNewlines = intercalate "\n"
+	let csv'ify = addNewlines . ((addCommas headers) :) . map (addCommas . (map show))
+	let vectorize_file = csv'ify . map (makeVectorList headers . sort . words) . lines
+	mapM_ (\(x,y) -> writeFile x $ vectorize_file y) [("training.txt", f3), ("test.txt", f4)]
 
 addToKey :: Map String Int -> String -> Map String Int
 addToKey = flip $ adjust (+1)
