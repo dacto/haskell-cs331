@@ -6,6 +6,7 @@ import Data.List (transpose, genericLength, sort, partition)
 type Probability = Double
 type BayesTable  = (Probability, Probability)
 type NaiveBayes  = [BayesTable]
+data Review      = Negative | Positive deriving (Show, Eq)
 
 main = do
 	args <- getArgs
@@ -13,18 +14,20 @@ main = do
 	trainLabels <- readFile $ args !! 1
 	testData    <- readFile $ args !! 2
 	testLabels  <- readFile $ args !! 3
-	let unCSV = map parseNums . tail . lines
-	let getLabels = parseLabels . lines
 	let bayesTables = map (calcTable $ getLabels trainLabels) . transpose . unCSV
-	let classify = bayes_classification $ bayesTables trainData
-	let results = zip (getLabels testLabels) $ map classify $ unCSV testData
-	let (pos, neg) = partition ((==True) . fst) results
-	let posAcc = foldl (flip ((+) . fromEnum . snd)) 0 pos * 100 `div` length pos
-	let negAcc = (length neg - foldl (flip ((+) . fromEnum . snd)) 0 neg) * 100 `div` length neg
+	let classify    = bayes_classification $ bayesTables trainData
+	let results     = zip (getLabels testLabels) $ map classify $ unCSV testData
+	let (pos, neg)  = partition ((==Positive) . fst) results
+	let posAcc      = (numReviews Positive $ map snd pos) * 100 `div` length pos
+	let negAcc      = (numReviews Negative $ map snd neg) * 100 `div` length neg
 	mapM_ putStrLn ["Positive: " ++ show posAcc ++ "%", "Negative: " ++ show negAcc ++ "%"]
 
-bayes_classification :: NaiveBayes -> [Bool] -> Bool
-bayes_classification a b = (calcProb 0 a b) > 0
+{-
+ - The classification function. Takes in a list of probability
+ - tables and a list of Bools. Produces a review.
+ -}
+bayes_classification :: NaiveBayes -> [Bool] -> Review
+bayes_classification a b = if (calcProb 0 a b) >= 0 then Positive else Negative
 
 {-
  - Rather than doing a maximum of the probability of a positive
@@ -38,36 +41,51 @@ bayes_classification a b = (calcProb 0 a b) > 0
 calcProb :: Probability -> NaiveBayes -> [Bool] -> Probability
 calcProb p [] _ = p
 calcProb p _ [] = p
-calcProb p (x:xs) (y:ys)
-	| y         = calcProb (p + log (fst x)     - log (snd x))     xs ys
-	| otherwise = calcProb (p + log (1 - fst x) - log (1 - snd x)) xs ys
+calcProb p ((a,b):xs) (y:ys)
+	| y         = calcProb (p + log a       - log b)       xs ys
+	| otherwise = calcProb (p + log (1 - a) - log (1 - b)) xs ys
 
 {-
  - I save the probabilities for a positive or negative review
  - given the presence of the specific word. I also add in the
  - prior of 1/2.
  -}
-calcTable :: [Bool] -> [Bool] -> BayesTable
+calcTable :: [Review] -> [Bool] -> BayesTable
 calcTable b a = (topA / bottomA, topB / bottomB)
 	where
 		topA    = fromIntegral (trueTrue a b 0) + 1
-		bottomA = fromIntegral (foldl (flip ((+) . fromEnum)) 0 b) + 2
+		bottomA = fromIntegral (numReviews Positive b) + 2
 		topB    = fromIntegral (trueFalse a b 0) + 1
-		bottomB = fromIntegral (length b - (foldl (flip ((+) . fromEnum)) 0 b)) + 2
+		bottomB = fromIntegral (numReviews Negative b) + 2
 
-trueTrue :: [Bool] -> [Bool] -> Int -> Int
+numReviews :: Review -> [Review] -> Int
+numReviews = numReviews' 0
+
+numReviews' :: Int -> Review -> [Review] -> Int
+numReviews' c review [] = c
+numReviews' c review (r:rs)
+	| r == review = numReviews' (c + 1) review rs
+	| otherwise   = numReviews' c review rs
+
+trueTrue :: [Bool] -> [Review] -> Int -> Int
 trueTrue [] _ c = c
 trueTrue _ [] c = c
 trueTrue (x:xs) (y:ys) c
-	| not x || not y = trueTrue xs ys c
-	| otherwise      = trueTrue xs ys c + 1
+	| not x || y == Negative = trueTrue xs ys c
+	| otherwise              = trueTrue xs ys c + 1
 
-trueFalse :: [Bool] -> [Bool] -> Int -> Int
+trueFalse :: [Bool] -> [Review] -> Int -> Int
 trueFalse [] _ c = c
 trueFalse _ [] c = c
 trueFalse (x:xs) (y:ys) c
-	| not x || y = trueFalse xs ys c
-	| otherwise  = trueFalse xs ys c + 1
+	| not x || y == Positive = trueFalse xs ys c
+	| otherwise              = trueFalse xs ys c + 1
+
+unCSV :: String -> [[Bool]]
+unCSV = map parseNums . tail . lines
+
+getLabels :: String -> [Review]
+getLabels = parseLabels . lines
 
 parseWords :: String -> [String]
 parseWords [] = []
@@ -83,9 +101,9 @@ parseNums (x:xs)
 	| x == '1'  = True  : parseNums xs
 	| otherwise = parseNums xs
 
-parseLabels :: [String] -> [Bool]
+parseLabels :: [String] -> [Review]
 parseLabels [] = []
 parseLabels (x:xs)
-	| x == "neg" = False : parseLabels xs
-	| x == "pos" = True  : parseLabels xs
+	| x == "neg" = Negative : parseLabels xs
+	| x == "pos" = Positive : parseLabels xs
 	| otherwise  = parseLabels xs
